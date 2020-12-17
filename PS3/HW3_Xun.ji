@@ -20,24 +20,24 @@ Pkg.add("PyPlot")
 
 # define the functions
 
-u1(x) = log(x)
-u2(x) = (x)^(1/2)
-u3(x,s) = x^(1-s)/(1-s)
-u4(x) = u3(x,2)
-u5(x) = u3(x,5)
-u6(x) = u3(x,10)
+u_1(x) = log(x)
+u_2(x) = (x)^(1/2)
+u_3(x,s) = x^(1-s)/(1-s)
+u_4(x) = u_3(x,2)
+u_5(x) = u_3(x,5)
+u_6(x) = u_3(x,10)
 
 # define the derivatives
-u1_d(x) = 1/x
-u2_d(x) = (1/2)*x^(-1/2)
-u3_d(x,s) = x^(-s)
-u4_d(x) = x^(-2)
-u5_d(x) = x^(-5)
-u6_d(x) = x^(-10)
+u_1_d(x) = 1/x
+u_2_d(x) = (1/2)*x^(-1/2)
+u_3_d(x,s) = x^(-s)
+u_4_d(x) = x^(-2)
+u_5_d(x) = x^(-5)
+u_6_d(x) = x^(-10)
 
-aaa = range(0.05,2;length=1000)
+axf = range(0.05,2;length=1000)
 
-u1.(aaa)
+u_1.(axf)
 
 # Polynomial: Newton Basis
 
@@ -65,25 +65,25 @@ u1.(aaa)
         return sum
     end
 
-
+    # Newton Polynomial (Runge) for different n
 
 
 nom = ["Log","Square","CES σ=2", "CES σ=5", "CES σ=10"]
-funs = [u1,u2,u4,u5,u6]
+funs = [u_1,u_2,u_4,u_5,u_6]
 for i in 1:5
     name = nom[i]
     for n = (4,6,11,21)
-        fn = funs[i].(aaa)
-
-        xi = collect(range(0.05,2;length=n)) ;
-        yi = funs[i].(xi)
-
-        interp=map(z->newton(xi,yi,z),aaa)
-
+        fn = funs[i].(axf)
+        # Grid of nodes for interpolation
+        xi = collect(range(0.05,2;length=n)) ; # Collect makes it an array instead of a collection
+        yi = funs[i].(xi) # the corresponding y-coordinates
+        # Interpolation
+        interp=map(z->newton(xi,yi,z),axf) # Interpolating poly for the data
+        # Plot
         gr()
         plot(title="Interpolation $name n=$n - Newton Polynomial")
-        plot!(aaa,fn,linewidth=3,label = "Function: $name",legend=(0.75,0.75),foreground_color_legend = nothing,background_color_legend = nothing)
-        plot!(aaa,interp,linewidth=3,label="Interpolation")
+        plot!(axf,fn,linewidth=3,label = "Function: $name",legend=(0.75,0.75),foreground_color_legend = nothing,background_color_legend = nothing)
+        plot!(axf,interp,linewidth=3,label="Interpolation")
         plot!(xi,yi,linetype=:scatter,marker=(:diamond,9),markercolor=RGB(0.5,0.1,0.1),label = "Data")
         savefig("graphs/Newton $name _n_$n")
 
@@ -154,7 +154,10 @@ function CubicNatural(x::Array,y::Array)
     return a, b, c, d
 end
 
-
+# CubicNaturalEval. The inputs are the value at which
+# the spline is evaluated, w, and the x-coordinates of the data. The function first finds the
+# interval [xi; xi+1]; i = 1; :::;m-1; w belongs to, and then evaluates the spline at w using the
+# corresponding cubic polynomial.
 
 function CubicNaturalEval(x::Array,y::Array,w)
     m=length(x)
@@ -170,33 +173,40 @@ function CubicNaturalEval(x::Array,y::Array,w)
             p=p+1
         end
     end
-
+    # p is the number of the subinterval w falls into, i.e., p=i means
+    # w falls into the ith subinterval $(x_i,x_{i+1}), and therefore
+    # the value of the spline at w is
+    # a_i+b_i*(w-x_i)+c_i*(w-x_i)^2+d_i*(w-x_i)^3.
     a, b, c, d = CubicNatural(x,y)
     return a[p]+b[p]*(w-x[p])+c[p]*(w-x[p])^2+d[p]*(w-x[p])^3
 end
 
 nom = ["Log","Square","CES σ=2", "CES σ=5", "CES σ=10"]
-funs = [u1,u2,u4,u5,u6]
+funs = [u_1,u_2,u_4,u_5,u_6]
 for i in 1:5
     name = nom[i]
     for n = (4,6,11,21)
-        fn = funs[i].(aaa)
+        fn = funs[i].(axf)
         # Grid of nodes for interpolation
-        xi = collect(range(0.05,2;length=n)) ;
+        xi = collect(range(0.05,2;length=n)) ; # Collect makes it an array instead of a collection
         yi = funs[i].(xi) # the corresponding y-coordinates
         # Interpolation
-        interp=map(z->CubicNaturalEval(xi,yi,z),aaa) # Interpolating poly for the data
+        interp=map(z->CubicNaturalEval(xi,yi,z),axf) # Interpolating poly for the data
         # Plot
         gr()
         plot(title="Interpolation $name n=$n - Cubic Spline Natural")
-        plot!(aaa,fn,linewidth=3,label = "Function: $name",legend=(0.75,0.75),foreground_color_legend = nothing,background_color_legend = nothing)
-        plot!(aaa,interp,linewidth=3,label="Interpolation")
+        plot!(axf,fn,linewidth=3,label = "Function: $name",legend=(0.75,0.75),foreground_color_legend = nothing,background_color_legend = nothing)
+        plot!(axf,interp,linewidth=3,label="Interpolation")
         plot!(xi,yi,linetype=:scatter,marker=(:diamond,9),markercolor=RGB(0.5,0.1,0.1),label = "Data")
         savefig("graphs/CSN_$name _n_$n")
     end
 end
 
 
+# Schumaker shape preserving Spline
+
+##find_xi funtion that takes in x and y coordinates
+##and slopes si at each xi and returns the ξ parameter
 function find_xi(t::Array,z::Array,s::Array)
     #Based on Algorithm Tudd pag 233
     n = length(t)
@@ -252,23 +262,23 @@ end
 
 
 nom = ["Log","Square Root","CES σ=2", "CES σ=5", "CES σ=10"]
-funs = [u1,u2,u4,u5,u6]
-slopes = [u1_d,u2_d,u4_d,u5_d,u6_d]
+funs = [u_1,u_2,u_4,u_5,u_6]
+slopes = [u_1_d,u_2_d,u_4_d,u_5_d,u_6_d]
 for i in 1:5
     name = nom[i]
     for n = (4,6,11,21)
-        fn = funs[i].(aaa)
+        fn = funs[i].(axf)
         # Grid of nodes for interpolation
         global xi = collect(range(0.05,2;length=n)) ; # Collect makes it an array instead of a collection
         global yi = funs[i].(xi) # the corresponding y-coordinates
         global si = slopes[i].(xi) #the corresponding slopes
         # Interpolation
-        interp=map(z->Schumaker(xi,yi,si,z)[1],aaa) # Interpolating poly for the data
+        interp=map(z->Schumaker(xi,yi,si,z)[1],axf) # Interpolating poly for the data
         # Plot
         gr()
         plot(title="Interpolation $name n=$n - Schumaker Shape Preserving Spline")
-        plot!(aaa,fn,linewidth=3,label = "Function: $name",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
-        plot!(aaa,interp,linewidth=3,label="Interpolation")
+        plot!(axf,fn,linewidth=3,label = "Function: $name",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
+        plot!(axf,interp,linewidth=3,label="Interpolation")
         plot!(xi,yi,linetype=:scatter,marker=(:diamond,9),markercolor=RGB(0.5,0.1,0.1),label = "Data")
         savefig("graphs/Schu_$name _n_$n")
     end
@@ -277,8 +287,8 @@ end
 ## graphs
 ##
 fnom = ["Log","Square Root","CES "*latexinline("σ=2"), "CES "*latexinline("σ=5"), "CES "*latexinline("σ=10")]
-funs = [u1,u2,u4,u5,u6]
-slopes = [u1_d,u2_d,u4_d,u5_d,u6_d]
+funs = [u_1,u_2,u_4,u_5,u_6]
+slopes = [u_1_d,u_2_d,u_4_d,u_5_d,u_6_d]
 method = [newton, CubicNaturalEval, Schumaker]
 gridpts = [4,6,11,21]
 nom = ["Log","SQR","CES_2", "CES_5", "CES_10"]
@@ -288,7 +298,7 @@ for i in 1:length(funs)
     plotname = nom[i]
     title = titlenom[i]
     name = fnom[i]
-    fn = funs[i].(aaa)
+    fn = funs[i].(axf)
     IE = Array{Float64}(undef, 3, 4)
     local interp = Array{Float64}(undef,1000,3)
     for n = gridpts
@@ -299,10 +309,10 @@ for i in 1:length(funs)
             global yi = funs[i].(xi) # the corresponding y-coordinates
             # Interpolation
             if j ≤ 2
-                global interp[:,j] = map(z->method[j](xi,yi,z)[1],aaa)
+                global interp[:,j] = map(z->method[j](xi,yi,z)[1],axf)
             else
                 global si = slopes[i].(xi) #the corresponding slopes
-                global interp[:,j]=map(z->Schumaker(xi,yi,si,z)[1],aaa) # Interpolating poly for the data
+                global interp[:,j]=map(z->Schumaker(xi,yi,si,z)[1],axf) # Interpolating poly for the data
             end
             #IE[j,n] = interp_err_SN(fn,interp)
             #IE[j,n] = sqrt(sum((fn .- interp).^2))
@@ -311,10 +321,10 @@ for i in 1:length(funs)
         # Plot
         gr()
         plot(title="Interpolation $title Grid size n=$n")
-        plot!(aaa,fn,linewidth=3,label = "Function: $title",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
-        plot!(aaa,interp[:,1],linewidth=3,label=fmet[2], linestyle=:dash)
-        plot!(aaa,interp[:,2],linewidth=3,label=fmet[3],linestyle=:dot)
-        plot!(aaa,interp[:,3],linewidth=3,label=fmet[4], linestyle=:dashdot)
+        plot!(axf,fn,linewidth=3,label = "Function: $title",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
+        plot!(axf,interp[:,1],linewidth=3,label=fmet[2], linestyle=:dash)
+        plot!(axf,interp[:,2],linewidth=3,label=fmet[3],linestyle=:dot)
+        plot!(axf,interp[:,3],linewidth=3,label=fmet[4], linestyle=:dashdot)
         plot!(xi,yi,linetype=:scatter,marker=(:circle,6),markercolor=:blue,label = "Data")
         savefig("graphs/$plotname $n.png")
     end
@@ -325,8 +335,8 @@ end
 ##
 
 fnom = ["Log","Square Root","CES "*latexinline("σ=2"), "CES "*latexinline("σ=5"), "CES "*latexinline("σ=10")]
-funs = [u1,u2,u4,u5,u6]
-slopes = [u1_d,u2_d,u4_d,u5_d,u6_d]
+funs = [u_1,u_2,u_4,u_5,u_6]
+slopes = [u_1_d,u_2_d,u_4_d,u_5_d,u_6_d]
 method = [newton, CubicNaturalEval, Schumaker]
 gridpts = [4,6,11,21]
 nom = ["Log","SQR","CES_2", "CES_5", "CES_10"]
@@ -335,7 +345,7 @@ for i in 1:length(funs)
     plotname = nom[i]
     title = titlenom[i]
     name = fnom[i]
-    fn = funs[i].(aaa)
+    fn = funs[i].(axf)
     IE = Array{Float64}(undef, 3, 4)
     for j in 1:length(method)
         for n in 1:length(gridpts)
@@ -344,10 +354,10 @@ for i in 1:length(funs)
             global yi = funs[i].(xi) # the corresponding y-coordinates
             # Interpolation
             if j ≤ 2
-                global interp = map(z->method[j](xi,yi,z)[1],aaa)
+                global interp = map(z->method[j](xi,yi,z)[1],axf)
             else
                 global si = slopes[i].(xi) #the corresponding slopes
-                global interp=map(z->Schumaker(xi,yi,si,z)[1],aaa) # Interpolating poly for the data
+                global interp=map(z->Schumaker(xi,yi,si,z)[1],axf) # Interpolating poly for the data
             end
             IE[j,n] = sqrt(sum((fn .- interp).^2))
         end
@@ -364,7 +374,14 @@ for i in 1:length(funs)
 end
 
 
+## Grid spacing
+##
 
+# # No need for ScaledInterpolations if not using PolyRange
+#grid = range(0,1,length=n)
+# grid = a + (b-a)*grid^θ PolYnomial scaling
+# a = 0.01, b = 0.5, θ = 2, interval = [0,1], number of points = 6
+#    ci = 0.01 .+ (0.50-0.01).*range(0,1;length=6).^2
 
 function polygrid(n::Integer,a::Float64,b::Float64,θ::Float64)
     grid = collect(range(0,1; length=n))
@@ -378,13 +395,13 @@ function interp_err_SN(F::Array,I::Array)
     error = maximum(abs.(I.-F))/maximum(abs.(F))
 end
 
-maximum(abs.(interp.-u1.(aaa)))/maximum(abs.(u1.(aaa)))
+maximum(abs.(interp.-u_1.(axf)))/maximum(abs.(u_1.(axf)))
 
-interp_err_SN(u1.(aaa),interp)
+interp_err_SN(u_1.(axf),interp)
 
 fnom = ["Log","Square Root","CES "*latexinline("σ=2"), "CES "*latexinline("σ=5"), "CES "*latexinline("σ=10")]
-funs = [u1,u2,u4,u5,u6]
-slopes = [u1_d,u2_d,u4_d,u5_d,u6_d]
+funs = [u_1,u_2,u_4,u_5,u_6]
+slopes = [u_1_d,u_2_d,u_4_d,u_5_d,u_6_d]
 method = [newton, CubicNaturalEval, Schumaker]
 curvature = [1.0,2.0,3.0,4.0]
 nom = ["Log","SQR","CES_2", "CES_5", "CES_10"]
@@ -394,7 +411,7 @@ for i in 1:length(funs)
     plotname = nom[i]
     title = titlenom[i]
     name = fnom[i]
-    fn = funs[i].(aaa)
+    fn = funs[i].(axf)
     IE = Array{Float64}(undef, 3, 4)
     for j in 1:length(method)
         met = method[j]
@@ -405,10 +422,10 @@ for i in 1:length(funs)
             global yi = funs[i].(xi) # the corresponding y-coordinates
             # Interpolation
             if j ≤ 2
-                global interp = map(z->method[j](xi,yi,z)[1],aaa)
+                global interp = map(z->method[j](xi,yi,z)[1],axf)
             else
                 global si = slopes[i].(xi) #the corresponding slopes
-                global interp=map(z->Schumaker(xi,yi,si,z)[1],aaa) # Interpolating poly for the data
+                global interp=map(z->Schumaker(xi,yi,si,z)[1],axf) # Interpolating poly for the data
             end
             #IE[j,n] = interp_err_SN(fn,interp)
             IE[j,n] = sqrt(sum((fn .- interp).^2))
@@ -429,8 +446,8 @@ end
 
 
 fnom = ["Log","Square Root","CES "*latexinline("σ=2"), "CES "*latexinline("σ=5"), "CES "*latexinline("σ=10")]
-funs = [u1,u2,u4,u5,u6]
-slopes = [u1_d,u2_d,u4_d,u5_d,u6_d]
+funs = [u_1,u_2,u_4,u_5,u_6]
+slopes = [u_1_d,u_2_d,u_4_d,u_5_d,u_6_d]
 method = [newton, CubicNaturalEval, Schumaker]
 curvature = [1.0,1.5,2.0,3.0]
 nom = ["Log","SQR","CES_2", "CES_5", "CES_10"]
@@ -440,7 +457,7 @@ for i in 1:length(funs)
     plotname = nom[i]
     title = titlenom[i]
     name = fnom[i]
-    fn = funs[i].(aaa)
+    fn = funs[i].(axf)
     IE = Array{Float64}(undef, 3, 4)
     local interp = Array{Float64}(undef,1000,3)
     for n in 1:length(curvature)
@@ -452,20 +469,22 @@ for i in 1:length(funs)
             global yi = funs[i].(xi) # the corresponding y-coordinates
             # Interpolation
             if j ≤ 2
-                global interp[:,j] = map(z->method[j](xi,yi,z)[1],aaa)
+                global interp[:,j] = map(z->method[j](xi,yi,z)[1],axf)
             else
                 global si = slopes[i].(xi) #the corresponding slopes
-                global interp[:,j]=map(z->Schumaker(xi,yi,si,z)[1],aaa) # Interpolating poly for the data
+                global interp[:,j]=map(z->Schumaker(xi,yi,si,z)[1],axf) # Interpolating poly for the data
             end
+            #IE[j,n] = interp_err_SN(fn,interp)
+            #IE[j,n] = sqrt(sum((fn .- interp).^2))
         end
         global fmet = ["$name","Newton Basis Polynomials","Natural Cubic Splines","Shape-preserving Schumaker Splines"]
         # Plot
         gr()
         plot(title="Interpolation n=6 - $title, θ=$curv")
-        plot!(log.(aaa),fn,linewidth=3,label = "Function: $title",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
-        plot!(log.(aaa),interp[:,1],linewidth=3,label=fmet[2], linestyle=:dash)
-        plot!(log.(aaa),interp[:,2],linewidth=3,label=fmet[3],linestyle=:dot)
-        plot!(log.(aaa),interp[:,3],linewidth=3,label=fmet[4], linestyle=:dashdot)
+        plot!(log.(axf),fn,linewidth=3,label = "Function: $title",legend=:bottomright,foreground_color_legend = nothing,background_color_legend = nothing)
+        plot!(log.(axf),interp[:,1],linewidth=3,label=fmet[2], linestyle=:dash)
+        plot!(log.(axf),interp[:,2],linewidth=3,label=fmet[3],linestyle=:dot)
+        plot!(log.(axf),interp[:,3],linewidth=3,label=fmet[4], linestyle=:dashdot)
         plot!(log.(xi),yi,linetype=:scatter,marker=(:circle,6),markercolor=:blue,label = "Data")
         savefig("graphs/$plotname $curv.png")
     end
