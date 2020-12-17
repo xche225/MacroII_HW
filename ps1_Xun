@@ -71,6 +71,32 @@ plot!(x_axis, ss_r_1[1:10],
 label = ["ss r"])
 savefig("HW1_r_1")
 
+x_axis = 1:10
+println("--------------------------")
+plot(x_axis, w_1[1:10],
+label = ["w"])
+
+plot!(x_axis, ss_w_1[1:10],
+label = ["ss w"])
+savefig("HW1_w_1")
+
+x_axis = 1:10
+println("--------------------------")
+plot(x_axis, y_1[1:10],
+label = ["y"])
+
+plot!(x_axis, ss_y_1[1:10],
+label = ["ss y"])
+savefig("HW1_y_1")
+
+x_axis = 1:10
+println("--------------------------")
+plot(x_axis, c_1[1:10],
+label = ["c"])
+
+plot!(x_axis, ss_c_1[1:10],
+label = ["ss c"])
+savefig("HW1_c_1")
 
 parameter(a,b,1.05)
 k_2=zeros(run+1)
